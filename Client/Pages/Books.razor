@@ -1,0 +1,85 @@
+﻿@page "/books"
+@using LM2.Shared
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@inject HttpClient Http
+
+
+@if (books == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>표지</th>
+                <th>타이틀</th>
+                <th>작가</th>
+                <th>출판사</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book1 in @books)
+            {
+                <tr>
+                    <td><img src="@book1.img_url" /></td>
+                    <td>@book1.title</td>
+                    <td>@book1.writers</td>
+                    <td>@book1.publisher</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    public class Book {
+        public String ISBN { get; set; }
+        public String title { get; set; }
+        public String writers { get; set; }
+        public String publisher { get; set; }
+        public String img_url { get; set; }
+    }
+
+    private List<Book> books;
+    private HttpClient client = new HttpClient();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var stringTask = client.GetStringAsync("http://192.168.0.103:5000/books");
+
+        var msg = await stringTask;
+        books = new List<Book>();
+        JObject jobj = JObject.Parse(msg);
+        JArray jr = JArray.Parse(jobj["books"].ToString());
+
+        /*
+        "ISBN": "9788960882720",
+            "img_url": "https://image.aladin.co.kr/product/20640/44/cover/8960882720_1.jpg",
+            "kdc ": "005.118",
+            "published_at": "Tue, 01 Jan 2019 00:00:00 GMT",
+            "publisher": "Digitalbooks",
+            "title": "AWS 클라우드 기반의 Django 웹 애플리케이션",
+            "translator": null,
+            "writers": "신성진"
+        */
+        foreach (JObject job in jr)
+        {
+            Book temp = new Book();
+            temp.ISBN = job["ISBN"].ToString();
+            temp.img_url = job["img_url"].ToString();
+            temp.publisher = job["publisher"].ToString();
+            temp.title = job["title"].ToString();
+            temp.writers = job["writers"].ToString();
+            books.Add(temp);
+        }
+
+    }
+
+
+
+}

@@ -1,0 +1,99 @@
+﻿@page "/login"
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@inject HttpClient Http
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@using System.Text
+@using LM2.Shared
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@using System.Net.Http
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+
+<h3>Login</h3>
+
+<EditForm Model="@model" OnValidSubmit="@PostRequest">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Email</label>
+        <InputText @bind-Value="model.Username" class="form-control" />
+        <ValidationMessage For="@(() => model.Username)" />
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <InputText @bind-Value="model.Password" type="password" class="form-control" />
+        <ValidationMessage For="@(() => model.Password)" />
+    </div>
+    <button class="btn btn-primary">
+        @if (loading)
+        {
+            <span class="spinner-border spinner-border-sm mr-1"></span>
+        }
+        Login
+    </button>
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-danger mt-3 mb-0">@error</div>
+    }
+</EditForm>
+
+<h1>@responseBody</h1>
+<h1>@AppState.token</h1>
+
+
+
+@code {
+    private HttpClient client = new HttpClient();
+    String ID;
+    String PW;
+    String result;
+    private Model model = new Model();
+    private bool loading;
+    private string error;
+
+    private class Model
+    {
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+    }
+
+    private string responseBody;
+
+    private async Task PostRequest()
+    {
+        loading = true;
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("POST"),
+            RequestUri = new Uri("http://192.168.0.103:5000/login"),
+            Content =
+                JsonContent.Create(new Info
+                {
+                    email = model.Username,
+                    password = model.Password
+                })
+        };
+        var response = await Http.SendAsync(requestMessage);
+        var responseStatusCode = response.StatusCode;
+
+        responseBody = await response.Content.ReadAsStringAsync();
+        JObject jobj = JObject.Parse(responseBody);
+
+        AppState.token = jobj["access_token"].ToString();
+        loading = false;
+    }
+
+    public class Info
+    {
+        public string email { get; set; }
+        public string password { get; set; }
+    }
+
+
+
+}

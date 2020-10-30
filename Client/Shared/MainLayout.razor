@@ -1,0 +1,35 @@
+﻿@inherits LayoutComponentBase
+
+<div class="sidebar">
+    <NavMenu />
+</div>
+
+<div class="main">
+    <div class="top-row px-4">
+        @if (token == "")
+        {
+        <NavLink class="nav-link" href="Login">
+            <span class="oi oi-key" aria-hidden="true"></span>Login
+        </NavLink>
+        }
+        else
+        {
+            <a href="http://blazor.net" target="_blank" class="ml-md-auto">@name</a>
+        }
+
+    </div>
+
+    <div class="content px-4">
+        @Body
+    </div>
+</div>
+
+
+@code {
+    String token = AppState.token;
+    String name = AppState.name;
+    public void click()
+    {
+        AppState.token = "token";
+    }
+}

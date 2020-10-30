@@ -1,0 +1,66 @@
+@page "/fetchdata"
+@using LM2.Shared
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@inject HttpClient Http
+
+@if (libs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>name</th>
+                <th>tel</th>
+                <th>location</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var lib in @libs)
+            {
+                <tr>
+                    <td>@lib.lib_id</td>
+                    <td>@lib.lib_name</td>
+                    <td>@lib.tel</td>
+                    <td>@lib.location</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<Libraries> libs;
+    private HttpClient client = new HttpClient();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var stringTask = client.GetStringAsync("http://192.168.0.103:5000/libraries");
+
+        var msg = await stringTask;
+        libs = new List<Libraries>();
+        JObject jobj = JObject.Parse(msg);
+        JArray jr = JArray.Parse(jobj["Libraries"].ToString());
+
+        foreach (JObject job in jr)
+        {
+            int t_id = Int32.Parse(job["lib_id"].ToString());
+            string t_name = job["lib_name"].ToString();
+            string t_loc = job["location"].ToString();
+            string tel = job["tel"].ToString();
+
+            libs.Add(new Libraries(t_id, t_name, t_loc, tel));
+        }
+
+    }
+
+
+
+}

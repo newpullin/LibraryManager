@@ -1,0 +1,105 @@
+﻿@page "/userstatus"
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@inject HttpClient Http
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@using System.Text
+@using LM2.Shared
+@using System.Net.Http
+@using Newtonsoft.Json.Linq
+@using System.Net.Http
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+
+<h3>User Status</h3>
+
+@if (status_list == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ISBN</th>
+                <th>빌린날</th>
+                <th>도서관</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sts in @status_list)
+            {
+                <tr>
+                    <td>@sts.ISBN</td>
+                    <td>@sts.land_at</td>
+                    <td>@sts.lib_id</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HttpClient client = new HttpClient();
+    String ID;
+    String PW;
+    String result;
+    private bool loading;
+    private string error;
+    List<Status> status_list;
+
+    private string responseBody;
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+
+        client.DefaultRequestHeaders.Add("Authorization", AppState.token);
+        var response = await client.GetAsync("http://192.168.0.103:5000/userstatus");
+
+        responseBody = await response.Content.ReadAsStringAsync();
+        JObject jobj = JObject.Parse(responseBody);
+
+        JArray jr = JArray.Parse(jobj["status"].ToString());
+        status_list = new List<Status>();
+        foreach (JObject job in jr)
+        {
+            string p1 = job["ISBN"].ToString();
+            string p2 = job["landing_at"].ToString();
+            string p3 = job["landing_status"].ToString();
+            string p4 = job["lib_id"].ToString();
+            string p5 = job["user_id"].ToString();
+
+            status_list.Add(new Status(p1, p2, p3, p4, p5));
+        }
+
+        loading = false;
+    }
+    public class Status
+    {
+        public Status(String isbn, String land_at, String land_status, String lib_id, String user_id)
+        {
+            this.ISBN = isbn;
+            this.land_at = land_at;
+            this.land_status = land_status;
+            this.lib_id = lib_id;
+            this.user_id = user_id;
+        }
+        public String ISBN { get; set; }
+        public String land_at { get; set; }
+        public String land_status { get; set; }
+        public String lib_id { get; set; }
+        public String user_id { get; set; }
+
+    }
+    public class Token
+    {
+        public string Authorization { get; set; }
+    }
+
+
+
+}
